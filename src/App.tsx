@@ -10,7 +10,8 @@ import {
   Save,
   Send,
   Trash2,
-  Upload
+  Upload,
+  Workflow
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { ChangeEvent, ReactNode } from "react";
@@ -276,9 +277,15 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <div>
-          <p className="eyebrow">Meeting Agent</p>
+        <div className="topbar-copy">
+          <p className="eyebrow">
+            <Workflow size={15} />
+            Meeting Agent
+          </p>
           <h1>智能專案助理</h1>
+          <p className="topbar-subtitle">
+            貼上會議逐字稿，AI 拆解任務、比對職責、送到 GitLab 與 Slack 追蹤。
+          </p>
         </div>
         <div className="status-strip" aria-label="dispatch status">
           <Metric label="總任務" value={stats.total} />
@@ -288,10 +295,18 @@ export default function App() {
         </div>
       </header>
 
+      <div className="workflow-rail" aria-label="meeting dispatch workflow">
+        <span>會議記錄</span>
+        <span>AI 拆解</span>
+        <span>職責匹配</span>
+        <span>人工審核</span>
+        <span>GitLab / Slack</span>
+      </div>
+
       <main className="workspace">
         <aside className="settings-column">
           <section className="panel">
-            <PanelTitle icon={<KeyRound size={18} />} title="API 接入" />
+            <PanelTitle icon={<KeyRound size={18} />} title="API 接入" caption="送出前先檢查 AI、GitLab、Slack 是否可用。" />
             <div className="readiness-list" aria-label="integration readiness">
               {Object.values(readiness).map((item) => (
                 <div className={`readiness-item ${item.ready ? "ready" : "missing"}`} key={item.key}>
@@ -370,7 +385,7 @@ export default function App() {
           </section>
 
           <section className="panel">
-            <PanelTitle icon={<Save size={18} />} title="自動化規則" />
+            <PanelTitle icon={<Save size={18} />} title="自動化規則" caption="控制哪些任務可以不經二次判斷直接派發。" />
             <label>
               自動派發信心門檻
               <input
@@ -399,7 +414,7 @@ export default function App() {
 
         <section className="main-column">
           <section className="panel intake-panel">
-            <PanelTitle icon={<ClipboardList size={18} />} title="會議記錄" />
+            <PanelTitle icon={<ClipboardList size={18} />} title="會議記錄" caption="可貼逐字稿、會議摘要或行動項目草稿。" />
             <div className="meeting-grid">
               <label>
                 會議名稱
@@ -438,7 +453,7 @@ export default function App() {
 
           <section className="panel">
             <div className="panel-header">
-              <PanelTitle icon={<GitBranch size={18} />} title="人員職責表" />
+              <PanelTitle icon={<GitBranch size={18} />} title="人員職責表" caption="AI 不知道公司內部分工時，會用這張表補齊 owner。" />
               <div className="panel-actions">
                 <label className="file-button" title="匯入 XLSX">
                   <Upload size={15} />
@@ -475,7 +490,7 @@ export default function App() {
           </section>
 
           <section className="panel">
-            <PanelTitle icon={<CheckCircle2 size={18} />} title="派工審核" />
+            <PanelTitle icon={<CheckCircle2 size={18} />} title="派工審核" caption="確認 owner、期限、風險與外部 issue 狀態後再同步。" />
             <div className="task-list">
               {tasks.length === 0 ? (
                 <div className="empty-state">尚未產生任務。先貼上會議記錄並執行 AI 拆解。</div>
@@ -519,11 +534,14 @@ function Metric({ label, value, tone }: { label: string; value: number; tone?: "
   );
 }
 
-function PanelTitle({ icon, title }: { icon: ReactNode; title: string }) {
+function PanelTitle({ icon, title, caption }: { icon: ReactNode; title: string; caption?: string }) {
   return (
     <div className="panel-title">
-      {icon}
-      <h2>{title}</h2>
+      <div className="panel-icon">{icon}</div>
+      <div>
+        <h2>{title}</h2>
+        {caption && <p>{caption}</p>}
+      </div>
     </div>
   );
 }
@@ -574,6 +592,8 @@ function TaskEditor({
           onChange={(event) => onChange({ selected: event.currentTarget.checked })}
           aria-label={`選取 ${task.title}`}
         />
+        <strong>{Math.round(task.confidence * 100)}%</strong>
+        <span>信心</span>
       </div>
       <div className="task-body">
         <div className="task-topline">
@@ -621,7 +641,6 @@ function TaskEditor({
           </label>
         </div>
         <div className="task-meta">
-          <span>信心 {Math.round(task.confidence * 100)}%</span>
           <span>派工依據：{assigneeSourceLabel(task.assigneeSource)}{task.assigneeReason ? `，${task.assigneeReason}` : ""}</span>
           <span>來源：{task.sourceQuote || "未擷取"}</span>
           {task.issueUrl && (
