@@ -612,6 +612,7 @@ function TaskEditor({
         </div>
         <div className="task-meta">
           <span>信心 {Math.round(task.confidence * 100)}%</span>
+          <span>派工依據：{assigneeSourceLabel(task.assigneeSource)}{task.assigneeReason ? `，${task.assigneeReason}` : ""}</span>
           <span>來源：{task.sourceQuote || "未擷取"}</span>
           {task.issueUrl && (
             <a href={task.issueUrl} target="_blank" rel="noreferrer">
@@ -627,6 +628,12 @@ function TaskEditor({
 
 function Badge({ value, tone }: { value: string; tone?: string }) {
   return <span className={`badge ${tone ?? ""}`}>{value}</span>;
+}
+
+function assigneeSourceLabel(source: ExtractedTask["assigneeSource"]): string {
+  if (source === "explicit_transcript") return "逐字稿";
+  if (source === "responsibility_table") return "職責表";
+  return "未指派";
 }
 
 function splitCsv(value: string): string[] {

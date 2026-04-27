@@ -80,6 +80,8 @@ test("implicit transcript task routes by project area without explicit owner", (
   assert.equal(task.dispatchState, "auto_ready");
   assert.equal(task.assigneeName, "Alice Chen");
   assert.equal(task.gitlabUsername, "alice");
+  assert.equal(task.assigneeSource, "responsibility_table");
+  assert.match(task.assigneeReason, /dashboard|frontend|UI/);
 });
 
 test("explicitly mentioned owner wins over project-area routing", () => {
@@ -100,6 +102,8 @@ test("explicitly mentioned owner wins over project-area routing", () => {
 
   assert.equal(task.assigneeName, "Alice Chen");
   assert.equal(task.gitlabUsername, "alice");
+  assert.equal(task.assigneeSource, "explicit_transcript");
+  assert.match(task.assigneeReason, /Alice Chen/);
 });
 
 test("demo parser treats a speaker self-commitment as the mentioned owner", () => {
@@ -111,6 +115,7 @@ test("demo parser treats a speaker self-commitment as the mentioned owner", () =
   assert.equal(tasks.length, 1);
   assert.equal(tasks[0].assigneeName, "Alice Chen");
   assert.equal(tasks[0].gitlabUsername, "alice");
+  assert.equal(tasks[0].assigneeSource, "explicit_transcript");
   assert.match(tasks[0].sourceQuote, /Alice Chen/);
 });
 

@@ -1,5 +1,6 @@
 import type {
   AiTaskCandidate,
+  AssigneeSource,
   DispatchPolicy,
   ExtractedTask,
   ResponsibilityRow,
@@ -174,6 +175,8 @@ export function routeAndGradeTasks(
       assigneeName: matchedOwner?.row.name ?? candidate.suggestedOwner.trim(),
       gitlabUsername: matchedOwner?.row.gitlabUsername ?? "",
       slackMention: matchedOwner?.row.slackMention ?? "",
+      assigneeSource: matchedOwner?.source ?? "unassigned",
+      assigneeReason: matchedOwner?.reason ?? "未命中職責表",
       dueDate: candidate.dueDate.trim(),
       labels: normalizeLabels(candidate.labels),
       confidence,
@@ -188,10 +191,15 @@ export function routeAndGradeTasks(
 export function matchResponsibility(
   candidate: AiTaskCandidate,
   responsibilities: ResponsibilityRow[]
-): { row: ResponsibilityRow; score: number } | undefined {
+): { row: ResponsibilityRow; score: number; source: AssigneeSource; reason: string } | undefined {
   const explicitOwner = findOwnerByAlias(candidate.suggestedOwner, responsibilities);
   if (explicitOwner) {
-    return { row: explicitOwner, score: 0.98 };
+    return {
+      row: explicitOwner,
+      score: 0.98,
+      source: "explicit_transcript",
+      reason: `逐字稿明確提到 ${explicitOwner.name}`
+    };
   }
 
   const haystack = normalizeText([
@@ -203,31 +211,49 @@ export function matchResponsibility(
     candidate.labels.join(" ")
   ].join(" "));
 
-  let best: { row: ResponsibilityRow; score: number } | undefined;
+  let best:
+    | { row: ResponsibilityRow; score: number; source: AssigneeSource; reason: string }
+    | undefined;
 
   for (const row of responsibilities) {
     let score = 0;
+    const signals: string[] = [];
     const ownerNeedles = [row.name, row.gitlabUsername, row.slackMention].map(normalizeText);
     if (ownerNeedles.some((needle) => needle && haystack.includes(needle))) {
       score += 0.45;
+      signals.push(`owner alias ${row.name}`);
     }
 
     for (const moduleName of row.modules) {
       const needle = normalizeText(moduleName);
-      if (needle && haystack.includes(needle)) score += 0.28;
+      if (needle && haystack.includes(needle)) {
+        score += 0.28;
+        signals.push(`module ${moduleName}`);
+      }
     }
 
     for (const keyword of row.keywords) {
       const needle = normalizeText(keyword);
-      if (needle && haystack.includes(needle)) score += 0.16;
+      if (needle && haystack.includes(needle)) {
+        score += 0.16;
+        signals.push(`keyword ${keyword}`);
+      }
     }
 
     const role = normalizeText(row.role);
-    if (role && haystack.includes(role)) score += 0.2;
+    if (role && haystack.includes(role)) {
+      score += 0.2;
+      signals.push(`role ${row.role}`);
+    }
 
     score = Math.min(score, 0.96);
     if (score > 0 && (!best || score > best.score)) {
-      best = { row, score };
+      best = {
+        row,
+        score,
+        source: "responsibility_table",
+        reason: `職責表匹配：${signals.slice(0, 3).join(", ")}`
+      };
     }
   }
 

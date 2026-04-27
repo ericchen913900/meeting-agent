@@ -1,5 +1,6 @@
 export type RiskLevel = "low" | "medium" | "high";
 export type DispatchState = "auto_ready" | "needs_review" | "dispatched" | "failed";
+export type AssigneeSource = "explicit_transcript" | "responsibility_table" | "unassigned";
 
 export interface ResponsibilityRow {
   id: string;
@@ -51,6 +52,8 @@ export interface ExtractedTask {
   assigneeName: string;
   gitlabUsername: string;
   slackMention: string;
+  assigneeSource: AssigneeSource;
+  assigneeReason: string;
   dueDate: string;
   labels: string[];
   confidence: number;
