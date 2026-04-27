@@ -22,6 +22,7 @@ import {
 } from "./api";
 import { useLocalStorageState, useSessionStorageState } from "./storage";
 import { defaultPolicy } from "../shared/policy";
+import { getIntegrationReadiness } from "../shared/readiness";
 import { parseResponsibilityRecords } from "../shared/responsibilityImport";
 import type {
   AiSettings,
@@ -117,6 +118,7 @@ export default function App() {
     const dispatched = tasks.filter((task) => task.issueUrl).length;
     return { autoReady, needsReview, dispatched, total: tasks.length };
   }, [tasks]);
+  const readiness = useMemo(() => getIntegrationReadiness({ ai, gitlab, slack }), [ai, gitlab, slack]);
 
   async function handleAnalyze(demoMode = false) {
     setBusy(demoMode ? "demo" : "analyze");
@@ -290,6 +292,14 @@ export default function App() {
         <aside className="settings-column">
           <section className="panel">
             <PanelTitle icon={<KeyRound size={18} />} title="API 接入" />
+            <div className="readiness-list" aria-label="integration readiness">
+              {Object.values(readiness).map((item) => (
+                <div className={`readiness-item ${item.ready ? "ready" : "missing"}`} key={item.key}>
+                  <strong>{item.label}</strong>
+                  <span>{item.ready ? "可用" : `缺 ${item.missing.join("、")}`}</span>
+                </div>
+              ))}
+            </div>
             <label>
               AI Provider
               <select
