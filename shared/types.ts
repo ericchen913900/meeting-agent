@@ -114,11 +114,14 @@ export interface GitLabSyncRequest {
   tasks: ExtractedTask[];
 }
 
+export type SlackMessageMode = "dispatch_summary" | "reminder" | "auto_dispatch";
+
 export interface SlackMessageRequest {
   slack: SlackSettings;
   meeting: MeetingInput;
   tasks: ExtractedTask[];
-  mode: "dispatch_summary" | "reminder";
+  mode: SlackMessageMode;
+  today?: string;
 }
 
 export interface SlackMessageResult {

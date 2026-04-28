@@ -561,6 +561,59 @@ h2 {
   gap: 12px;
 }
 
+.automation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.automation-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 14px;
+  align-items: center;
+  border: 1px solid rgba(29, 117, 102, 0.23);
+  border-radius: 8px;
+  padding: 14px;
+  background: linear-gradient(180deg, #fbfffd, var(--teal-bg));
+}
+
+.automation-card.urgent {
+  border-color: rgba(154, 103, 14, 0.27);
+  background: linear-gradient(180deg, #fffdf6, var(--amber-bg));
+}
+
+.automation-card span {
+  color: #243531;
+  font-size: 13px;
+  font-weight: 860;
+}
+
+.automation-card strong {
+  grid-row: span 2;
+  color: var(--teal-dark);
+  font-size: 36px;
+  line-height: 1;
+}
+
+.automation-card.urgent strong {
+  color: var(--amber);
+}
+
+.automation-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.automation-card button {
+  grid-column: 1 / -1;
+  width: fit-content;
+  margin-top: 2px;
+}
+
 .empty-state {
   min-height: 118px;
   display: grid;
@@ -622,7 +675,7 @@ h2 {
 
 .task-topline {
   display: grid;
-  grid-template-columns: minmax(180px, 1fr) auto auto;
+  grid-template-columns: minmax(180px, 1fr) auto auto auto;
   gap: 8px;
   align-items: center;
 }
@@ -764,6 +817,7 @@ h2 {
   .status-strip,
   .settings-column,
   .meeting-grid,
+  .automation-grid,
   .task-fields,
   .task-topline {
     grid-template-columns: 1fr;
@@ -801,6 +855,10 @@ h2 {
     grid-template-columns: auto auto 1fr;
     justify-items: start;
     align-items: center;
+  }
+
+  .automation-card button {
+    width: 100%;
   }
 
   .button-row button,

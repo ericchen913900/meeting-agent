@@ -25,6 +25,13 @@ import { useLocalStorageState, useSessionStorageState } from "./storage";
 import { defaultPolicy } from "../shared/policy";
 import { getIntegrationReadiness } from "../shared/readiness";
 import { parseResponsibilityRecords } from "../shared/responsibilityImport";
+import {
+  canDirectDispatchToSlack,
+  dueText,
+  dueTiming,
+  localIsoDate,
+  shouldRemindTask
+} from "../shared/slackRules";
 import type {
   AiSettings,
   DispatchPolicy,
@@ -33,6 +40,7 @@ import type {
   MeetingInput,
   ResponsibilityRow,
   RiskLevel,
+  SlackMessageMode,
   SlackSettings
 } from "../shared/types";
 
@@ -112,6 +120,7 @@ export default function App() {
   const [slack, setSlack] = useSessionStorageState<SlackSettings>("meeting-agent:slack", defaultSlack);
   const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState("準備接收會議記錄");
+  const today = localIsoDate();
 
   const stats = useMemo(() => {
     const autoReady = tasks.filter((task) => task.dispatchState === "auto_ready").length;
@@ -119,6 +128,13 @@ export default function App() {
     const dispatched = tasks.filter((task) => task.issueUrl).length;
     return { autoReady, needsReview, dispatched, total: tasks.length };
   }, [tasks]);
+  const slackAutomation = useMemo(
+    () => ({
+      direct: tasks.filter(canDirectDispatchToSlack),
+      reminders: tasks.filter((task) => shouldRemindTask(task, today))
+    }),
+    [tasks, today]
+  );
   const readiness = useMemo(() => getIntegrationReadiness({ ai, gitlab, slack }), [ai, gitlab, slack]);
 
   async function handleAnalyze(demoMode = false) {
@@ -181,11 +197,16 @@ export default function App() {
     }
   }
 
-  async function handleSlack(mode: "dispatch_summary" | "reminder") {
+  async function handleSlack(mode: SlackMessageMode, outgoingTasks = tasks) {
+    if (outgoingTasks.length === 0) {
+      setNotice(slackEmptyNotice(mode));
+      return;
+    }
+
     setBusy(mode);
-    setNotice(mode === "dispatch_summary" ? "正在發送 Slack 派工摘要..." : "正在發送 Slack 催辦...");
+    setNotice(slackBusyNotice(mode));
     try {
-      const result = await postSlackMessage({ slack, meeting, tasks, mode });
+      const result = await postSlackMessage({ slack, meeting, tasks: outgoingTasks, mode, today });
       setNotice(result.ok ? `Slack 已送出到 ${result.channel}` : result.error ?? "Slack 發送失敗");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : String(error));
@@ -491,6 +512,35 @@ export default function App() {
 
           <section className="panel">
             <PanelTitle icon={<CheckCircle2 size={18} />} title="派工審核" caption="確認 owner、期限、風險與外部 issue 狀態後再同步。" />
+            {tasks.length > 0 && (
+              <div className="automation-grid" aria-label="slack automation actions">
+                <div className="automation-card">
+                  <span>低風險直送 Slack</span>
+                  <strong>{slackAutomation.direct.length}</strong>
+                  <p>只送低風險、可自動派發、有期限且有 Slack mention 的任務。</p>
+                  <button
+                    onClick={() => handleSlack("auto_dispatch", slackAutomation.direct)}
+                    disabled={busy !== "" || slackAutomation.direct.length === 0}
+                  >
+                    <Send size={16} />
+                    一鍵直送
+                  </button>
+                </div>
+                <div className="automation-card urgent">
+                  <span>依時間催辦</span>
+                  <strong>{slackAutomation.reminders.length}</strong>
+                  <p>只催逾期、今日到期、明日到期且尚未關閉的任務。</p>
+                  <button
+                    className="secondary"
+                    onClick={() => handleSlack("reminder", slackAutomation.reminders)}
+                    disabled={busy !== "" || slackAutomation.reminders.length === 0}
+                  >
+                    <Bell size={16} />
+                    發送催辦
+                  </button>
+                </div>
+              </div>
+            )}
             <div className="task-list">
               {tasks.length === 0 ? (
                 <div className="empty-state">尚未產生任務。先貼上會議記錄並執行 AI 拆解。</div>
@@ -513,9 +563,13 @@ export default function App() {
                 <RefreshCw size={16} />
                 同步狀態
               </button>
-              <button className="secondary" onClick={() => handleSlack("reminder")} disabled={busy !== "" || tasks.length === 0}>
+              <button
+                className="secondary"
+                onClick={() => handleSlack("reminder", slackAutomation.reminders)}
+                disabled={busy !== "" || slackAutomation.reminders.length === 0}
+              >
                 <Bell size={16} />
-                Slack 催辦
+                Slack 時間催辦
               </button>
             </div>
           </section>
@@ -604,6 +658,7 @@ function TaskEditor({
           />
           <Badge value={task.dispatchState === "auto_ready" ? "可自動" : task.dispatchState === "needs_review" ? "需審核" : task.dispatchState} />
           <Badge value={task.riskLevel} tone={riskTone(task.riskLevel)} />
+          <Badge value={dueBadge(task)} tone={dueTone(task)} />
         </div>
         <textarea
           className="task-description"
@@ -676,6 +731,35 @@ function riskTone(level: RiskLevel): string {
   if (level === "low") return "green";
   if (level === "medium") return "amber";
   return "red";
+}
+
+function dueBadge(task: ExtractedTask): string {
+  const timing = dueTiming(task.dueDate);
+  if (timing === "no_due") return "期限未定";
+  if (timing === "overdue") return dueText(task.dueDate);
+  if (timing === "today") return "今日到期";
+  if (timing === "tomorrow") return "明日到期";
+  return task.dueDate;
+}
+
+function dueTone(task: ExtractedTask): string {
+  const timing = dueTiming(task.dueDate);
+  if (timing === "overdue" || timing === "no_due") return "red";
+  if (timing === "today") return "amber";
+  if (timing === "tomorrow") return "blue";
+  return "";
+}
+
+function slackBusyNotice(mode: SlackMessageMode): string {
+  if (mode === "auto_dispatch") return "正在直送低風險 Slack 任務...";
+  if (mode === "reminder") return "正在依到期時間發送 Slack 催辦...";
+  return "正在發送 Slack 派工摘要...";
+}
+
+function slackEmptyNotice(mode: SlackMessageMode): string {
+  if (mode === "auto_dispatch") return "目前沒有符合低風險直送條件的任務。";
+  if (mode === "reminder") return "目前沒有逾期、今日到期或明日到期的任務需要催促。";
+  return "沒有可發送到 Slack 的任務。";
 }
 
 function randomId(): string {
