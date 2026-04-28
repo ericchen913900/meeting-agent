@@ -160,11 +160,7 @@ export function routeAndGradeTasks(
     const risk = gradeRisk(candidate, matchedOwner?.row, confidence);
     const dueDateMissing = !candidate.dueDate;
     const ownerMissing = !matchedOwner;
-    const needsReview =
-      risk.level !== "low" ||
-      confidence < policy.autoConfidenceThreshold ||
-      ownerMissing ||
-      (policy.requireDueDateForAutoDispatch && dueDateMissing);
+    const needsReview = risk.level === "high" || ownerMissing || (policy.requireDueDateForAutoDispatch && dueDateMissing);
 
     return {
       id: `task-${Date.now()}-${index}`,

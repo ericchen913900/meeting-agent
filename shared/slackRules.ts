@@ -28,7 +28,7 @@ export function canDirectDispatchToSlack(task: ExtractedTask): boolean {
     task.selected &&
     !isClosedTask(task) &&
     task.dispatchState === "auto_ready" &&
-    task.riskLevel === "low" &&
+    task.riskLevel !== "high" &&
     task.dueDate.trim().length > 0 &&
     task.slackMention.trim().length > 0
   );

@@ -58,14 +58,15 @@ test("reminder mode selects only open tasks due by tomorrow", () => {
   );
 });
 
-test("auto dispatch sends only low-risk auto-ready tasks that can reach Slack directly", () => {
+test("auto dispatch sends low and medium auto-ready tasks that can reach Slack directly", () => {
   const selected = selectSlackTasks(
     request({
       mode: "auto_dispatch",
       tasks: [
         task({ title: "Ready low risk" }),
+        task({ title: "Ready medium risk", riskLevel: "medium" }),
         task({ title: "Needs review", dispatchState: "needs_review" }),
-        task({ title: "Medium risk", riskLevel: "medium" }),
+        task({ title: "High risk", riskLevel: "high" }),
         task({ title: "Missing mention", slackMention: "" }),
         task({ title: "Manual unchecked", selected: false })
       ]
@@ -74,7 +75,7 @@ test("auto dispatch sends only low-risk auto-ready tasks that can reach Slack di
 
   assert.deepEqual(
     selected.map((item) => item.title),
-    ["Ready low risk"]
+    ["Ready low risk", "Ready medium risk"]
   );
 });
 

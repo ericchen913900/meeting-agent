@@ -505,7 +505,7 @@ export default function App() {
           </section>
 
           <section className="panel">
-            <PanelTitle icon={<Save size={18} />} title="自動化規則" caption="控制哪些任務可以直送，以及 Slack 何時自動催繳。" />
+            <PanelTitle icon={<Save size={18} />} title="自動化規則" caption="人類只審高風險；低/中風險由 AI 自動派工與催繳。" />
             <label>
               自動派發信心門檻
               <input
@@ -649,9 +649,9 @@ export default function App() {
             {tasks.length > 0 && (
               <div className="automation-grid" aria-label="slack automation actions">
                 <div className="automation-card">
-                  <span>低風險直送 Slack</span>
+                  <span>AI 自動直送 Slack</span>
                   <strong>{slackAutomation.direct.length}</strong>
-                  <p>只送低風險、可自動派發、有期限且有 Slack mention 的任務。</p>
+                  <p>低/中風險、可自動派發、有期限且有 Slack mention 的任務會直接送。</p>
                   <button
                     onClick={() => handleSlack("auto_dispatch", slackAutomation.direct)}
                     disabled={busy !== "" || slackAutomation.direct.length === 0}

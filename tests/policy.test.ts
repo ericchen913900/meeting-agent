@@ -150,6 +150,30 @@ test("high-risk wording requires review even with a matched owner", () => {
   assert.equal(task.riskLevel, "high");
 });
 
+test("medium-risk task is auto-ready when owner and due date are present", () => {
+  const [task] = routeAndGradeTasks(
+    [
+      candidate({
+        title: "Confirm API dependency before release",
+        description: "Bob needs to confirm the API dependency by 2026-05-02",
+        sourceQuote: "Bob confirm API dependency 2026-05-02",
+        projectArea: "backend",
+        suggestedOwner: "Bob",
+        dueDate: "2026-05-02",
+        labels: ["meeting-action", "backend"],
+        confidence: 0.84,
+        riskLevel: "medium"
+      })
+    ],
+    responsibilities
+  );
+
+  assert.equal(task.gitlabUsername, "bob");
+  assert.equal(task.riskLevel, "medium");
+  assert.equal(task.dispatchState, "auto_ready");
+  assert.equal(task.selected, true);
+});
+
 test("demo parser extracts tasks from transcript without named assignees", () => {
   const tasks = routeAndGradeTasks(
     demoAnalyze(
