@@ -2,6 +2,7 @@ import {
   Bell,
   CheckCircle2,
   ClipboardList,
+  Clock3,
   GitBranch,
   KeyRound,
   Play,
@@ -13,7 +14,7 @@ import {
   Upload,
   Workflow
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, ReactNode } from "react";
 import {
   analyzeMeeting,
@@ -22,6 +23,11 @@ import {
   syncGitLabIssues
 } from "./api";
 import { useLocalStorageState, useSessionStorageState } from "./storage";
+import {
+  defaultSlackAutomation,
+  getAutoReminderPlan,
+  normalizeCheckIntervalMinutes
+} from "../shared/autoReminder";
 import { defaultPolicy } from "../shared/policy";
 import { getIntegrationReadiness } from "../shared/readiness";
 import { parseResponsibilityRecords } from "../shared/responsibilityImport";
@@ -43,6 +49,7 @@ import type {
   SlackMessageMode,
   SlackSettings
 } from "../shared/types";
+import type { SlackAutomationSettings } from "../shared/autoReminder";
 
 const seedResponsibilities: ResponsibilityRow[] = [
   {
@@ -112,6 +119,15 @@ export default function App() {
     "meeting-agent:policy",
     defaultPolicy
   );
+  const [slackAutomationSettings, setSlackAutomationSettings] =
+    useLocalStorageState<SlackAutomationSettings>(
+      "meeting-agent:slackAutomation",
+      defaultSlackAutomation
+    );
+  const [autoReminderLog, setAutoReminderLog] = useLocalStorageState<Record<string, string>>(
+    "meeting-agent:autoReminderLog",
+    {}
+  );
   const [ai, setAi] = useSessionStorageState<AiSettings>("meeting-agent:ai", defaultAi);
   const [gitlab, setGitLab] = useSessionStorageState<GitLabSettings>(
     "meeting-agent:gitlab",
@@ -120,6 +136,7 @@ export default function App() {
   const [slack, setSlack] = useSessionStorageState<SlackSettings>("meeting-agent:slack", defaultSlack);
   const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState("準備接收會議記錄");
+  const autoReminderInFlight = useRef(false);
   const today = localIsoDate();
 
   const stats = useMemo(() => {
@@ -136,6 +153,77 @@ export default function App() {
     [tasks, today]
   );
   const readiness = useMemo(() => getIntegrationReadiness({ ai, gitlab, slack }), [ai, gitlab, slack]);
+  const autoReminderPlan = useMemo(
+    () =>
+      getAutoReminderPlan({
+        settings: slackAutomationSettings,
+        meeting,
+        tasks,
+        sentBatches: autoReminderLog
+      }),
+    [autoReminderLog, meeting, slackAutomationSettings, tasks]
+  );
+
+  useEffect(() => {
+    if (!slackAutomationSettings.enabled) return;
+
+    async function runAutoReminderCheck() {
+      if (busy !== "" || autoReminderInFlight.current || !readiness.slack.ready) return;
+
+      const plan = getAutoReminderPlan({
+        settings: slackAutomationSettings,
+        meeting,
+        tasks,
+        sentBatches: autoReminderLog,
+        now: new Date()
+      });
+      if (!plan.ready) return;
+
+      autoReminderInFlight.current = true;
+      setBusy("auto_reminder");
+      setNotice(`自動催繳：正在送出 ${plan.tasks.length} 件到 Slack...`);
+      try {
+        const result = await postSlackMessage({
+          slack,
+          meeting,
+          tasks: plan.tasks,
+          mode: "reminder",
+          today: plan.today
+        });
+        if (result.ok) {
+          setAutoReminderLog({
+            ...autoReminderLog,
+            [plan.batchKey]: new Date().toISOString()
+          });
+          setNotice(`自動催繳已送出 ${plan.tasks.length} 件到 ${result.channel}`);
+        } else {
+          setNotice(`自動催繳失敗：${result.error ?? "Slack 發送失敗"}`);
+        }
+      } catch (error) {
+        setNotice(error instanceof Error ? `自動催繳失敗：${error.message}` : String(error));
+      } finally {
+        autoReminderInFlight.current = false;
+        setBusy("");
+      }
+    }
+
+    void runAutoReminderCheck();
+    const interval = window.setInterval(
+      () => void runAutoReminderCheck(),
+      normalizeCheckIntervalMinutes(slackAutomationSettings.checkIntervalMinutes) * 60 * 1000
+    );
+
+    return () => window.clearInterval(interval);
+  }, [
+    autoReminderLog,
+    busy,
+    meeting,
+    readiness.slack.ready,
+    setAutoReminderLog,
+    slack,
+    slackAutomationSettings,
+    tasks
+  ]);
 
   async function handleAnalyze(demoMode = false) {
     setBusy(demoMode ? "demo" : "analyze");
@@ -258,6 +346,17 @@ export default function App() {
 
   function removeResponsibility(id: string) {
     setResponsibilities(responsibilities.filter((row) => row.id !== id));
+  }
+
+  function updateSlackAutomation(patch: Partial<SlackAutomationSettings>) {
+    const next = {
+      ...slackAutomationSettings,
+      ...patch
+    };
+    setSlackAutomationSettings({
+      ...next,
+      checkIntervalMinutes: normalizeCheckIntervalMinutes(next.checkIntervalMinutes)
+    });
   }
 
   async function handleResponsibilityXlsxImport(event: ChangeEvent<HTMLInputElement>) {
@@ -406,7 +505,7 @@ export default function App() {
           </section>
 
           <section className="panel">
-            <PanelTitle icon={<Save size={18} />} title="自動化規則" caption="控制哪些任務可以不經二次判斷直接派發。" />
+            <PanelTitle icon={<Save size={18} />} title="自動化規則" caption="控制哪些任務可以直送，以及 Slack 何時自動催繳。" />
             <label>
               自動派發信心門檻
               <input
@@ -430,6 +529,41 @@ export default function App() {
               />
               自動派發必須有期限
             </label>
+            <div className="divider" />
+            <label className="checkbox-line">
+              <input
+                type="checkbox"
+                checked={slackAutomationSettings.enabled}
+                onChange={(event) => updateSlackAutomation({ enabled: event.currentTarget.checked })}
+              />
+              啟用 Slack 自動催繳
+            </label>
+            <div className="scheduler-grid">
+              <label>
+                每日催繳時間
+                <input
+                  type="time"
+                  value={slackAutomationSettings.reminderTime}
+                  onChange={(event) => updateSlackAutomation({ reminderTime: event.currentTarget.value })}
+                />
+              </label>
+              <label>
+                檢查間隔（分鐘）
+                <input
+                  type="number"
+                  min="1"
+                  max="1440"
+                  value={slackAutomationSettings.checkIntervalMinutes}
+                  onChange={(event) =>
+                    updateSlackAutomation({ checkIntervalMinutes: Number(event.currentTarget.value) })
+                  }
+                />
+              </label>
+            </div>
+            <div className={`scheduler-status ${slackAutomationSettings.enabled ? "active" : ""}`}>
+              <Clock3 size={15} />
+              <span>{autoReminderStatus(autoReminderPlan, slackAutomationSettings, readiness.slack.ready)}</span>
+            </div>
           </section>
         </aside>
 
@@ -537,6 +671,21 @@ export default function App() {
                   >
                     <Bell size={16} />
                     發送催辦
+                  </button>
+                </div>
+                <div className={`automation-card scheduled ${slackAutomationSettings.enabled ? "active" : ""}`}>
+                  <span>自動催繳排程</span>
+                  <strong>{slackAutomationSettings.enabled ? "ON" : "OFF"}</strong>
+                  <p>
+                    每日 {slackAutomationSettings.reminderTime} 後自動檢查，每{" "}
+                    {normalizeCheckIntervalMinutes(slackAutomationSettings.checkIntervalMinutes)} 分鐘掃一次。
+                  </p>
+                  <button
+                    className="secondary"
+                    onClick={() => updateSlackAutomation({ enabled: !slackAutomationSettings.enabled })}
+                  >
+                    <Clock3 size={16} />
+                    {slackAutomationSettings.enabled ? "暫停排程" : "啟用排程"}
                   </button>
                 </div>
               </div>
@@ -760,6 +909,17 @@ function slackEmptyNotice(mode: SlackMessageMode): string {
   if (mode === "auto_dispatch") return "目前沒有符合低風險直送條件的任務。";
   if (mode === "reminder") return "目前沒有逾期、今日到期或明日到期的任務需要催促。";
   return "沒有可發送到 Slack 的任務。";
+}
+
+function autoReminderStatus(
+  plan: ReturnType<typeof getAutoReminderPlan>,
+  settings: SlackAutomationSettings,
+  slackReady: boolean
+): string {
+  if (!settings.enabled) return "未啟用。啟用後管理台開啟時會自動掃描並發送催繳。";
+  if (!slackReady) return "已啟用，但 Slack Channel ID 或 Bot Token 尚未填完整。";
+  if (plan.ready) return `已到條件，下一次掃描會自動催繳 ${plan.tasks.length} 件。`;
+  return plan.reason;
 }
 
 function randomId(): string {

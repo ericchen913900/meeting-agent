@@ -477,6 +477,32 @@ h2 {
   height: 18px;
 }
 
+.scheduler-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.scheduler-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 11px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 700;
+}
+
+.scheduler-status.active {
+  color: var(--teal-dark);
+  border-color: rgba(29, 117, 102, 0.28);
+  background: var(--teal-bg);
+}
+
 .settings-column .panel {
   display: grid;
   gap: 12px;
@@ -584,6 +610,11 @@ h2 {
   background: linear-gradient(180deg, #fffdf6, var(--amber-bg));
 }
 
+.automation-card.scheduled {
+  border-color: rgba(45, 95, 145, 0.24);
+  background: linear-gradient(180deg, #f9fbff, var(--blue-bg));
+}
+
 .automation-card span {
   color: #243531;
   font-size: 13px;
@@ -599,6 +630,15 @@ h2 {
 
 .automation-card.urgent strong {
   color: var(--amber);
+}
+
+.automation-card.scheduled strong {
+  color: var(--blue);
+  font-size: 28px;
+}
+
+.automation-card.scheduled.active strong {
+  color: var(--teal-dark);
 }
 
 .automation-card p {
@@ -818,6 +858,7 @@ h2 {
   .settings-column,
   .meeting-grid,
   .automation-grid,
+  .scheduler-grid,
   .task-fields,
   .task-topline {
     grid-template-columns: 1fr;
