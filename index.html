@@ -1,0 +1,1165 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>智能專案助理 · 產品簡報</title>
+    <style>
+      :root {
+        --ink: #141414;
+        --paper: #f4f0e7;
+        --paper-2: #e8e1d2;
+        --muted: #706a5e;
+        --line: rgba(20, 20, 20, 0.18);
+        --line-dark: rgba(244, 240, 231, 0.2);
+        --green: #19705f;
+        --red: #b64238;
+        --gold: #ad7b2c;
+        --blue: #2e5e86;
+        --dark: #111111;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        overflow: hidden;
+        background: var(--paper);
+        color: var(--ink);
+        font-family:
+          "Inter",
+          "Noto Sans TC",
+          "PingFang TC",
+          "Microsoft JhengHei",
+          Arial,
+          sans-serif;
+      }
+
+      body {
+        letter-spacing: 0;
+      }
+
+      button {
+        font: inherit;
+      }
+
+      #ink-canvas {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        opacity: 0.9;
+      }
+
+      .deck {
+        position: relative;
+        z-index: 1;
+        width: 100vw;
+        height: 100vh;
+      }
+
+      .slide {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        align-content: start;
+        gap: 20px;
+        width: 100%;
+        height: 100%;
+        padding: 54px 68px 64px;
+        opacity: 0;
+        transform: translateX(8%);
+        pointer-events: none;
+        transition:
+          opacity 420ms ease,
+          transform 520ms ease;
+      }
+
+      .slide.active {
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: auto;
+      }
+
+      .slide.prev {
+        transform: translateX(-8%);
+      }
+
+      .dark {
+        background:
+          radial-gradient(circle at 82% 18%, rgba(173, 123, 44, 0.18), transparent 28%),
+          linear-gradient(135deg, rgba(17, 17, 17, 0.96), rgba(29, 29, 26, 0.94));
+        color: var(--paper);
+      }
+
+      .light {
+        background:
+          linear-gradient(90deg, rgba(20, 20, 20, 0.05) 1px, transparent 1px),
+          linear-gradient(rgba(20, 20, 20, 0.04) 1px, transparent 1px),
+          linear-gradient(135deg, rgba(244, 240, 231, 0.96), rgba(232, 225, 210, 0.92));
+        background-size:
+          46px 46px,
+          46px 46px,
+          auto;
+        color: var(--ink);
+      }
+
+      .chrome {
+        position: absolute;
+        top: 24px;
+        left: 32px;
+        right: 32px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: inherit;
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+
+      .chrome span {
+        opacity: 0.72;
+      }
+
+      .foot {
+        position: absolute;
+        left: 32px;
+        right: 32px;
+        bottom: 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+        opacity: 0.7;
+      }
+
+      .kicker {
+        margin: 0 0 14px;
+        color: var(--gold);
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .dark .kicker {
+        color: #d7a344;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1,
+      h2 {
+        max-width: 980px;
+        font-family:
+          Georgia,
+          "Noto Serif TC",
+          "PMingLiU",
+          serif;
+        font-weight: 700;
+        line-height: 1.05;
+        letter-spacing: 0;
+      }
+
+      h1 {
+        font-size: 66px;
+      }
+
+      h2 {
+        font-size: 46px;
+      }
+
+      h3 {
+        font-size: 22px;
+        line-height: 1.2;
+        letter-spacing: 0;
+      }
+
+      .lead {
+        max-width: 780px;
+        color: inherit;
+        font-size: 21px;
+        line-height: 1.55;
+        opacity: 0.84;
+      }
+
+      .compact-lead {
+        max-width: 940px;
+        font-size: 18px;
+        line-height: 1.55;
+        opacity: 0.84;
+      }
+
+      .hero {
+        align-content: center;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+        gap: 38px;
+        align-items: end;
+      }
+
+      .hero-card {
+        border: 1px solid var(--line-dark);
+        border-radius: 8px;
+        padding: 26px;
+        background: rgba(244, 240, 231, 0.08);
+      }
+
+      .light .hero-card {
+        border-color: var(--line);
+        background: rgba(255, 255, 255, 0.34);
+      }
+
+      .hero-card strong {
+        display: block;
+        margin-bottom: 10px;
+        font-size: 38px;
+        font-family: Georgia, serif;
+        line-height: 1;
+      }
+
+      .hero-card span {
+        color: inherit;
+        font-size: 14px;
+        line-height: 1.55;
+        opacity: 0.75;
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+      }
+
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .grid-4 {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .panel {
+        min-height: 148px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.36);
+      }
+
+      .dark .panel {
+        border-color: var(--line-dark);
+        background: rgba(244, 240, 231, 0.07);
+      }
+
+      .panel .label {
+        display: inline-flex;
+        align-items: center;
+        min-height: 26px;
+        margin-bottom: 18px;
+        padding: 3px 10px;
+        border: 1px solid currentColor;
+        border-radius: 999px;
+        color: var(--green);
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .dark .panel .label {
+        color: #76c7b7;
+      }
+
+      .panel p,
+      .panel li {
+        color: inherit;
+        font-size: 16px;
+        line-height: 1.52;
+        opacity: 0.82;
+      }
+
+      .panel ul {
+        display: grid;
+        gap: 10px;
+        margin: 0;
+        padding-left: 20px;
+      }
+
+      .before-after {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+      }
+
+      .before-after .panel {
+        min-height: 330px;
+      }
+
+      .big-word {
+        margin-bottom: 18px;
+        font-family: Georgia, serif;
+        font-size: 50px;
+        line-height: 1;
+      }
+
+      .struck {
+        color: #e7b0aa;
+        text-decoration: line-through;
+        text-decoration-thickness: 2px;
+      }
+
+      .pipeline {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 14px;
+        align-items: stretch;
+      }
+
+      .step {
+        position: relative;
+        min-height: 186px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 18px 16px;
+        background: rgba(255, 255, 255, 0.38);
+      }
+
+      .step::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        right: -14px;
+        width: 14px;
+        height: 1px;
+        background: var(--line);
+      }
+
+      .step:last-child::after {
+        display: none;
+      }
+
+      .step b {
+        display: block;
+        margin-bottom: 12px;
+        color: var(--blue);
+        font-size: 28px;
+        font-family: Georgia, serif;
+      }
+
+      .step h3 {
+        margin-bottom: 10px;
+      }
+
+      .step p {
+        font-size: 15px;
+        line-height: 1.55;
+        opacity: 0.78;
+      }
+
+      .capability-board {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .capability {
+        min-height: 150px;
+        border: 1px solid var(--line-dark);
+        border-radius: 8px;
+        padding: 18px;
+        background: rgba(244, 240, 231, 0.07);
+      }
+
+      .capability:nth-child(2),
+      .capability:nth-child(5) {
+        grid-column: span 2;
+      }
+
+      .capability:nth-child(1),
+      .capability:nth-child(3),
+      .capability:nth-child(4),
+      .capability:nth-child(6) {
+        grid-column: span 2;
+      }
+
+      .capability h3 {
+        margin-bottom: 10px;
+      }
+
+      .capability p {
+        font-size: 14px;
+        line-height: 1.48;
+        opacity: 0.78;
+      }
+
+      .status-table {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.36);
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr 1.6fr;
+        gap: 18px;
+        align-items: center;
+        min-height: 54px;
+        padding: 10px 18px;
+        border-top: 1px solid var(--line);
+      }
+
+      .row:first-child {
+        border-top: 0;
+      }
+
+      .row.header {
+        min-height: 48px;
+        background: rgba(20, 20, 20, 0.06);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .status {
+        display: inline-flex;
+        width: fit-content;
+        min-height: 28px;
+        align-items: center;
+        margin-bottom: 14px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .status.ready {
+        border: 1px solid rgba(25, 112, 95, 0.55);
+        color: var(--green);
+      }
+
+      .status.gated {
+        border: 1px solid rgba(182, 66, 56, 0.46);
+        color: var(--red);
+      }
+
+      .arch {
+        display: grid;
+        grid-template-columns: 1fr 1.1fr 1fr;
+        gap: 18px;
+        align-items: center;
+      }
+
+      .arch-stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .arch-box {
+        min-height: 78px;
+        border: 1px solid var(--line-dark);
+        border-radius: 8px;
+        padding: 16px;
+        background: rgba(244, 240, 231, 0.07);
+      }
+
+      .arch-box b {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 16px;
+      }
+
+      .arch-box span {
+        font-size: 13px;
+        line-height: 1.45;
+        opacity: 0.72;
+      }
+
+      .arch-center {
+        min-height: 286px;
+        display: grid;
+        align-content: center;
+        justify-items: center;
+        border: 1px solid var(--line-dark);
+        border-radius: 8px;
+        background: rgba(244, 240, 231, 0.1);
+        text-align: center;
+      }
+
+      .arch-center strong {
+        display: block;
+        margin-bottom: 12px;
+        font-family: Georgia, serif;
+        font-size: 40px;
+        line-height: 1.1;
+      }
+
+      .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .metric {
+        min-height: 158px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 22px;
+        background: rgba(255, 255, 255, 0.38);
+      }
+
+      .metric strong {
+        display: block;
+        margin-bottom: 10px;
+        color: var(--green);
+        font-family: Georgia, serif;
+        font-size: 44px;
+        line-height: 1;
+      }
+
+      .metric span {
+        display: block;
+        font-size: 15px;
+        line-height: 1.5;
+        opacity: 0.78;
+      }
+
+      .timeline {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .timeline .panel {
+        min-height: 195px;
+      }
+
+      .nav {
+        position: fixed;
+        right: 26px;
+        top: 50%;
+        z-index: 5;
+        display: grid;
+        gap: 10px;
+        transform: translateY(-50%);
+      }
+
+      .dot {
+        width: 11px;
+        height: 11px;
+        border: 1px solid rgba(20, 20, 20, 0.5);
+        border-radius: 50%;
+        background: transparent;
+        cursor: pointer;
+      }
+
+      body.on-dark .dot {
+        border-color: rgba(244, 240, 231, 0.62);
+      }
+
+      .dot.active {
+        background: var(--green);
+        border-color: var(--green);
+      }
+
+      .controls {
+        position: fixed;
+        left: 50%;
+        bottom: 22px;
+        z-index: 6;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transform: translateX(-50%);
+      }
+
+      .control-btn {
+        width: 42px;
+        height: 42px;
+        border: 1px solid rgba(20, 20, 20, 0.2);
+        border-radius: 50%;
+        background: rgba(244, 240, 231, 0.82);
+        color: var(--ink);
+        cursor: pointer;
+      }
+
+      body.on-dark .control-btn {
+        border-color: rgba(244, 240, 231, 0.22);
+        background: rgba(17, 17, 17, 0.74);
+        color: var(--paper);
+      }
+
+      .page-indicator {
+        min-width: 64px;
+        color: inherit;
+        font-size: 13px;
+        text-align: center;
+      }
+
+      body.overview {
+        overflow: auto;
+      }
+
+      body.overview .deck {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(360px, 1fr));
+        gap: 18px;
+        height: auto;
+        min-height: 100vh;
+        padding: 18px;
+        background: var(--paper);
+      }
+
+      body.overview .slide {
+        position: relative;
+        width: 100%;
+        height: auto;
+        min-height: 420px;
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+        overflow: hidden;
+        border-radius: 8px;
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.16);
+      }
+
+      body.overview .nav,
+      body.overview .controls {
+        display: none;
+      }
+
+      @media (max-width: 960px) {
+        body {
+          overflow: auto;
+        }
+
+        .deck {
+          height: auto;
+          min-height: 100vh;
+        }
+
+        .slide,
+        .slide.active,
+        .slide.prev {
+          position: relative;
+          min-height: 100vh;
+          height: auto;
+          opacity: 1;
+          transform: none;
+          pointer-events: auto;
+          padding: 66px 24px 72px;
+        }
+
+        .slide:not(.active) {
+          display: none;
+        }
+
+        h1 {
+          font-size: 46px;
+        }
+
+        h2 {
+          font-size: 36px;
+        }
+
+        .lead {
+          font-size: 19px;
+        }
+
+        .hero-grid,
+        .grid-2,
+        .grid-3,
+        .before-after,
+        .pipeline,
+        .capability-board,
+        .arch,
+        .metric-grid,
+        .timeline {
+          grid-template-columns: 1fr;
+        }
+
+        .grid-4 {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .capability,
+        .capability:nth-child(1),
+        .capability:nth-child(2),
+        .capability:nth-child(3),
+        .capability:nth-child(4),
+        .capability:nth-child(5),
+        .capability:nth-child(6) {
+          grid-column: auto;
+        }
+
+        .row {
+          grid-template-columns: 1fr;
+          gap: 6px;
+        }
+
+        .step::after {
+          display: none;
+        }
+
+        .nav {
+          display: none;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .grid-4 {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body class="on-dark">
+    <canvas id="ink-canvas" aria-hidden="true"></canvas>
+    <main class="deck" aria-live="polite">
+      <section class="slide hero dark active" data-title="封面">
+        <div class="chrome"><span>Meeting Agent</span><span>Product Deck 2026</span></div>
+        <div class="hero-grid">
+          <div>
+            <p class="kicker">智能專案助理</p>
+            <h1>把會議逐字稿變成可追蹤的派工系統</h1>
+            <p class="lead">
+              人類只需要貼上會議逐字稿，AI 解析隱含任務並對照公司職責表；低與中風險工作自動建立 GitLab issue、推送 Slack，高風險才交給人工審核。
+            </p>
+          </div>
+          <div class="hero-card">
+            <strong>10</strong>
+            <span>頁產品簡報，涵蓋痛點、全自動流程、風險治理、GitLab 與 Slack 整合、Demo 證據與企業導入路線。</span>
+          </div>
+        </div>
+        <div class="foot"><span>Private Repo: meeting-agent</span><span>GitLab · Slack · AI Gateway</span></div>
+      </section>
+
+      <section class="slide light" data-title="問題">
+        <div class="chrome"><span>01 / Problem</span><span>會議後的斷點</span></div>
+        <div>
+          <p class="kicker">企業現場問題</p>
+          <h2>會議不會總是直接說「誰要做什麼」</h2>
+          <p class="compact-lead">
+            真實逐字稿常是討論、抱怨、風險、時間點與依賴關係混在一起。會後若靠人手整理，任務容易遺漏，owner 判斷不一致，追蹤也分散在訊息串與口頭提醒。
+          </p>
+        </div>
+        <div class="grid-3">
+          <article class="panel">
+            <span class="label">Leakage</span>
+            <h3>行動項目漏接</h3>
+            <p>逐字稿沒有明確責任人時，PM 需要重新推理誰最適合承接，容易漏掉高風險事項。</p>
+          </article>
+          <article class="panel">
+            <span class="label">Routing</span>
+            <h3>派工規則不一致</h3>
+            <p>不同主持人用不同邏輯派給不同人，企業規模放大後難以稽核。</p>
+          </article>
+          <article class="panel">
+            <span class="label">Follow-up</span>
+            <h3>催辦沒有閉環</h3>
+            <p>GitLab issue、Slack 提醒與會議紀錄分散，管理層看不到狀態落差。</p>
+          </article>
+        </div>
+        <div class="foot"><span>目標：把討論變成有 owner、有依據、有狀態的工作流</span><span>02</span></div>
+      </section>
+
+      <section class="slide dark" data-title="前後差異">
+        <div class="chrome"><span>02 / Before After</span><span>從人工追逐到系統監工</span></div>
+        <div>
+          <p class="kicker">Product Shift</p>
+          <h2>同一份會議記錄，輸出不同管理結果</h2>
+        </div>
+        <div class="before-after">
+          <article class="panel">
+            <div class="big-word struck">Before</div>
+            <ul>
+              <li>主持人人工讀逐字稿，靠記憶整理待辦。</li>
+              <li>誰負責由當下判斷決定，缺少一致規則。</li>
+              <li>GitLab issue 需要手動建立，Slack 需要另開訊息。</li>
+              <li>追蹤靠人肉催促，管理者只能問進度。</li>
+            </ul>
+          </article>
+          <article class="panel">
+            <div class="big-word">After</div>
+            <ul>
+              <li>AI 從討論中拆解工作、風險、期限與依賴。</li>
+              <li>系統先尊重逐字稿提及的人，再用職責表補位。</li>
+              <li>低與中風險任務自動建立 GitLab issue 並送 Slack。</li>
+              <li>高風險任務保留審核門檻，所有任務留下派工依據。</li>
+            </ul>
+          </article>
+        </div>
+        <div class="foot"><span>核心不是代替 PM，而是把 PM 的判斷流程制度化</span><span>03</span></div>
+      </section>
+
+      <section class="slide light" data-title="流程">
+        <div class="chrome"><span>03 / Workflow</span><span>從貼上到派發</span></div>
+        <div>
+          <p class="kicker">Operating Flow</p>
+          <h2>五段式自動派工流程</h2>
+          <p class="compact-lead">產品把人類工作收斂到兩件事：貼上逐字稿、審核高風險。其餘拆解、路由、issue 建立、Slack 推播與催繳交給 agent 自動完成。</p>
+        </div>
+        <div class="pipeline">
+          <article class="step">
+            <b>01</b>
+            <h3>貼會議記錄</h3>
+            <p>人工貼上逐字稿或摘要，保留原始上下文。</p>
+          </article>
+          <article class="step">
+            <b>02</b>
+            <h3>AI 拆解</h3>
+            <p>抽出任務、期限、優先級、風險與建議 owner。</p>
+          </article>
+          <article class="step">
+            <b>03</b>
+            <h3>職責路由</h3>
+            <p>比對 XLSX 人員職責表，以模組、關鍵字與角色分派。</p>
+          </article>
+          <article class="step">
+            <b>04</b>
+            <h3>風險閘門</h3>
+            <p>低與中風險直接進自動流程，高風險才停下來等人工審核。</p>
+          </article>
+          <article class="step">
+            <b>05</b>
+            <h3>同步監工</h3>
+            <p>建立 GitLab issue，送 Slack 派工摘要，並依 due date 自動催繳。</p>
+          </article>
+        </div>
+        <div class="foot"><span>Human reviews high risk only; AI handles routine execution</span><span>04</span></div>
+      </section>
+
+      <section class="slide hero light" data-title="定位">
+        <div class="chrome"><span>04 / Positioning</span><span>專案助理，不是聊天機器人</span></div>
+        <div class="hero-grid">
+          <div>
+            <p class="kicker">Product Position</p>
+            <h1>企業會議到執行的控制台</h1>
+            <p class="lead">
+              它的第一畫面不是聊天框，而是任務控制台：貼記錄、看 AI 拆解、看派工依據、審核高風險，其餘讓 agent 自動推進到 GitLab 與 Slack。
+            </p>
+          </div>
+          <div class="hero-card">
+            <strong>Agent</strong>
+            <span>AI 做「解析、派工、催繳」，人做「高風險核准」，外部系統做「紀錄與狀態來源」。</span>
+          </div>
+        </div>
+        <div class="foot"><span>適合分級自動化：例行任務全自動，高風險保留人類控制權</span><span>05</span></div>
+      </section>
+
+      <section class="slide dark" data-title="能力">
+        <div class="chrome"><span>05 / Capabilities</span><span>現有核心功能</span></div>
+        <div>
+          <p class="kicker">Capability Map</p>
+          <h2>已完成的產品骨架</h2>
+        </div>
+        <div class="capability-board">
+          <article class="capability">
+            <h3>逐字稿 AI 拆解</h3>
+            <p>支援 Anthropic gateway 與 OpenAI 風格 provider 設定，使用者自行輸入 API key。</p>
+          </article>
+          <article class="capability">
+            <h3>真正提及的人優先</h3>
+            <p>若逐字稿明確提到負責人，系統保留該 owner，並標記派工來源為逐字稿。</p>
+          </article>
+          <article class="capability">
+            <h3>XLSX 職責表匯入</h3>
+            <p>匯入公司人員、GitLab 帳號、Slack mention、角色、模組、關鍵字與備援人。</p>
+          </article>
+          <article class="capability">
+            <h3>GitLab issue 建立</h3>
+            <p>低與中風險任務可自動建立 issue，並附上 owner、deadline、priority、風險與原始摘要。</p>
+          </article>
+          <article class="capability">
+            <h3>Slack 派工與催辦</h3>
+            <p>低與中風險可直接送出群組摘要，高風險不直送；提醒依 due date 與排程狀態控制。</p>
+          </article>
+          <article class="capability">
+            <h3>自動催繳排程</h3>
+            <p>依任務期限產生 Slack reminder，支援排程開關、批次去重與避免測試期間重複推播。</p>
+          </article>
+        </div>
+        <div class="foot"><span>每項能力都以「可審核、可追蹤、可回溯」為前提</span><span>06</span></div>
+      </section>
+
+      <section class="slide light" data-title="治理">
+        <div class="chrome"><span>06 / Governance</span><span>大企業導入控制點</span></div>
+        <div>
+          <p class="kicker">Enterprise Guardrails</p>
+          <h2>企業不是只要自動化，也要管控自動化</h2>
+          <p class="compact-lead">產品把關鍵風險點放在可見位置：誰被派工、為什麼被派、哪個整合缺設定、是否需要人工覆核。</p>
+        </div>
+        <div class="grid-4">
+          <article class="panel">
+            <span class="status ready">已具備</span>
+            <h3>派工依據</h3>
+            <p>每張任務卡顯示「逐字稿」或「職責表」來源與理由，方便回溯。</p>
+          </article>
+          <article class="panel">
+            <span class="status ready">已具備</span>
+            <h3>高風險標記</h3>
+            <p>客戶資料、法務、跨團隊發布等工作會保留人工審核，不進低層級直送流程。</p>
+          </article>
+          <article class="panel">
+            <span class="status ready">已具備</span>
+            <h3>API key 模式</h3>
+            <p>使用者自行接入 key，後端只用於當次請求，不寫入 repo 或伺服器檔案。</p>
+          </article>
+          <article class="panel">
+            <span class="status gated">待接入</span>
+            <h3>正式權限與排程</h3>
+            <p>需要企業 SSO、資料庫、長期排程器與正式 Slack user ID 對照。</p>
+          </article>
+        </div>
+        <div class="foot"><span>治理能力先於全自動化，才能進入企業場景</span><span>07</span></div>
+      </section>
+
+      <section class="slide dark" data-title="架構">
+        <div class="chrome"><span>07 / Architecture</span><span>目前整合架構</span></div>
+        <div>
+          <p class="kicker">System View</p>
+          <h2>單一管理台，連接三個執行面</h2>
+        </div>
+        <div class="arch">
+          <div class="arch-stack">
+            <div class="arch-box">
+              <b>Web 管理台</b>
+              <span>貼會議記錄、匯入職責表、審核 AI 拆解、查看整合就緒。</span>
+            </div>
+            <div class="arch-box">
+              <b>Session Secrets</b>
+              <span>使用者輸入 provider token，瀏覽器只保留目前 tab session。</span>
+            </div>
+          </div>
+          <div class="arch-center">
+            <strong>Express API</strong>
+            <span>任務解析、責任路由、GitLab issue、Slack message dispatch</span>
+          </div>
+          <div class="arch-stack">
+            <div class="arch-box">
+              <b>AI Provider</b>
+              <span>Anthropic gateway 或 OpenAI 相容設定，輸出結構化任務。</span>
+            </div>
+            <div class="arch-box">
+              <b>GitLab</b>
+              <span>建立 issue、附上 owner、deadline、priority、風險與原始摘要。</span>
+            </div>
+            <div class="arch-box">
+              <b>Slack</b>
+            <span>向公司群組發布派工摘要，並依期限與風險規則送出催繳提醒。</span>
+            </div>
+          </div>
+        </div>
+        <div class="foot"><span>目前為單機 MVP 架構，正式版需加入 DB、Auth、Audit Log 與長期排程器</span><span>08</span></div>
+      </section>
+
+      <section class="slide light" data-title="Demo">
+        <div class="chrome"><span>08 / Demo Evidence</span><span>目前可展示狀態</span></div>
+        <div>
+          <p class="kicker">Build Evidence</p>
+          <h2>Demo 已跑通完整外部整合流程</h2>
+        </div>
+        <div class="metric-grid">
+          <article class="metric">
+            <strong>20</strong>
+            <span>自動化測試通過，覆蓋 AI 解析、責任路由、XLSX 匯入、Slack 規則與自動化策略。</span>
+          </article>
+          <article class="metric">
+            <strong>2</strong>
+            <span>外部測試建立 GitLab issue #1 與 #2，並成功同步狀態。</span>
+          </article>
+          <article class="metric">
+            <strong>1</strong>
+            <span>Slack 派工摘要已送到測試頻道，排程催繳可開關控制。</span>
+          </article>
+          <article class="metric">
+            <strong>0</strong>
+            <span>目前沒有在程式碼或 repo 內硬編任何使用者 API key。</span>
+          </article>
+        </div>
+        <div class="grid-2">
+          <article class="panel">
+            <span class="label">Can Demo Now</span>
+            <p>貼上逐字稿、AI 拆解、用職責表補位、低/中風險自動派工、高風險審核、GitLab 與 Slack 外部測試。</p>
+          </article>
+          <article class="panel">
+            <span class="label">Enterprise Setup</span>
+            <p>正式導入需要企業級 token 管理、Slack user ID 對照、GitLab assignee 對照、資料庫與 audit log。</p>
+          </article>
+        </div>
+        <div class="foot"><span>Demo 重點：證明「會議語意」可以轉成「可治理工作流」</span><span>09</span></div>
+      </section>
+
+      <section class="slide hero dark" data-title="下一步">
+        <div class="chrome"><span>09 / Next</span><span>企業版路線圖</span></div>
+        <div>
+          <p class="kicker">Roadmap</p>
+          <h1>下一步：從可跑 demo 升級成企業內部試點</h1>
+        </div>
+        <div class="timeline">
+          <article class="panel">
+            <span class="label">Phase 1</span>
+            <h3>資料與身分接入</h3>
+            <p>整理 GitLab project、Slack channel、user ID、職責 XLSX 標準欄位與會議樣本庫。</p>
+          </article>
+          <article class="panel">
+            <span class="label">Phase 2</span>
+            <h3>企業控制面</h3>
+            <p>加入登入權限、審核紀錄、派工版本、重試機制、issue 同步狀態與操作稽核。</p>
+          </article>
+          <article class="panel">
+            <span class="label">Phase 3</span>
+            <h3>監工自動化</h3>
+            <p>擴充逾期升級、週報摘要、多專案 dashboard 與管理層例外告警。</p>
+          </article>
+        </div>
+        <div class="foot"><span>結論：先做可控派工，再擴成企業專案監工 agent</span><span>10</span></div>
+      </section>
+    </main>
+
+    <nav class="nav" aria-label="Slide navigation"></nav>
+    <div class="controls" aria-label="Slide controls">
+      <button class="control-btn" type="button" data-action="prev" aria-label="Previous slide">‹</button>
+      <span class="page-indicator" aria-live="polite">1 / 10</span>
+      <button class="control-btn" type="button" data-action="next" aria-label="Next slide">›</button>
+    </div>
+
+    <script>
+      const slides = Array.from(document.querySelectorAll(".slide"));
+      const nav = document.querySelector(".nav");
+      const indicator = document.querySelector(".page-indicator");
+      let index = 0;
+
+      slides.forEach((slide, i) => {
+        const dot = document.createElement("button");
+        dot.className = "dot";
+        dot.type = "button";
+        dot.setAttribute("aria-label", `${i + 1}. ${slide.dataset.title}`);
+        dot.addEventListener("click", () => goTo(i));
+        nav.appendChild(dot);
+      });
+
+      const dots = Array.from(document.querySelectorAll(".dot"));
+
+      function goTo(nextIndex) {
+        index = Math.max(0, Math.min(slides.length - 1, nextIndex));
+        slides.forEach((slide, i) => {
+          slide.classList.toggle("active", i === index);
+          slide.classList.toggle("prev", i < index);
+        });
+        dots.forEach((dot, i) => dot.classList.toggle("active", i === index));
+        indicator.textContent = `${index + 1} / ${slides.length}`;
+        document.body.classList.toggle("on-dark", slides[index].classList.contains("dark"));
+      }
+
+      document.querySelector('[data-action="prev"]').addEventListener("click", () => goTo(index - 1));
+      document.querySelector('[data-action="next"]').addEventListener("click", () => goTo(index + 1));
+
+      window.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowRight" || event.key === "PageDown" || event.key === " ") {
+          event.preventDefault();
+          goTo(index + 1);
+        }
+        if (event.key === "ArrowLeft" || event.key === "PageUp") {
+          event.preventDefault();
+          goTo(index - 1);
+        }
+        if (event.key === "Escape") {
+          document.body.classList.toggle("overview");
+        }
+      });
+
+      goTo(0);
+
+      const canvas = document.getElementById("ink-canvas");
+      const gl = canvas.getContext("webgl", { antialias: false, alpha: true });
+
+      if (gl) {
+        const vertexSource = `
+          attribute vec2 position;
+          void main() {
+            gl_Position = vec4(position, 0.0, 1.0);
+          }
+        `;
+        const fragmentSource = `
+          precision mediump float;
+          uniform vec2 resolution;
+          uniform float time;
+          float noise(vec2 p) {
+            return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+          }
+          void main() {
+            vec2 uv = gl_FragCoord.xy / resolution.xy;
+            float grain = noise(uv * resolution.xy + time * 24.0);
+            float wave = sin((uv.x + uv.y) * 16.0 + time * 0.8) * 0.5 + 0.5;
+            float ink = smoothstep(0.18, 0.92, wave * 0.28 + grain * 0.72);
+            gl_FragColor = vec4(vec3(ink), 0.035);
+          }
+        `;
+
+        function compile(type, source) {
+          const shader = gl.createShader(type);
+          gl.shaderSource(shader, source);
+          gl.compileShader(shader);
+          return shader;
+        }
+
+        const program = gl.createProgram();
+        gl.attachShader(program, compile(gl.VERTEX_SHADER, vertexSource));
+        gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fragmentSource));
+        gl.linkProgram(program);
+        gl.useProgram(program);
+
+        const buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.bufferData(
+          gl.ARRAY_BUFFER,
+          new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
+          gl.STATIC_DRAW,
+        );
+
+        const position = gl.getAttribLocation(program, "position");
+        gl.enableVertexAttribArray(position);
+        gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+
+        const resolution = gl.getUniformLocation(program, "resolution");
+        const time = gl.getUniformLocation(program, "time");
+
+        function resize() {
+          const ratio = Math.min(window.devicePixelRatio || 1, 2);
+          canvas.width = Math.floor(window.innerWidth * ratio);
+          canvas.height = Math.floor(window.innerHeight * ratio);
+          gl.viewport(0, 0, canvas.width, canvas.height);
+        }
+
+        function render(now) {
+          gl.uniform2f(resolution, canvas.width, canvas.height);
+          gl.uniform1f(time, now * 0.001);
+          gl.drawArrays(gl.TRIANGLES, 0, 6);
+          requestAnimationFrame(render);
+        }
+
+        window.addEventListener("resize", resize);
+        resize();
+        requestAnimationFrame(render);
+      }
+    </script>
+  </body>
+</html>
