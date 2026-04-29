@@ -4,6 +4,13 @@ Web management console MVP: paste meeting notes or a meeting transcript, let AI 
 
 The transcript does not need to directly say "who does what." The agent first extracts work from the discussion, then assigns it by responsibility rules. For example, UI/dashboard work routes to frontend, API/GitLab work routes to backend, and release/cross-team/requirement risk routes to PM or planning owners.
 
+## Product usage guide
+
+完整中文使用教學請看：
+
+- [docs/USAGE.md](docs/USAGE.md)
+- [Product deck](docs/product-deck/index.html)
+
 ## User-provided API keys
 
 This project does not ship with any API key. Users enter credentials in the Web console:
@@ -79,6 +86,6 @@ Recommended headers:
 
 - Meeting input is manual paste only; audio/video transcription is out of scope.
 - The personnel responsibility table is maintained in the UI.
-- Scheduled background reminders are not enabled; the first version supports manual sync and one-click Slack reminder messages.
+- Scheduled Slack reminders are browser-session automation in the current MVP. Production deployment still needs a durable worker, database, and audit log.
 - There is no multi-tenant account system or long-term token storage.
 - XLSX import uses the `xlsx` package, which currently has npm audit advisories with no npm-provided fix. Keep import to trusted local files.

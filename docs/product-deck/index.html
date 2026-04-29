@@ -740,12 +740,12 @@
             <p class="kicker">智能專案助理</p>
             <h1>把會議逐字稿變成可追蹤的派工系統</h1>
             <p class="lead">
-              從人工貼上會議記錄開始，AI 解析隱含任務，對照公司人員職責表，經審核後派發 GitLab issue，並在 Slack 大群同步與催辦。
+              人類只需要貼上會議逐字稿，AI 解析隱含任務並對照公司職責表；低與中風險工作自動建立 GitLab issue、推送 Slack，高風險才交給人工審核。
             </p>
           </div>
           <div class="hero-card">
             <strong>10</strong>
-            <span>頁產品簡報，涵蓋痛點、流程、企業治理、整合架構、Demo 狀態與下一步導入需求。</span>
+            <span>頁產品簡報，涵蓋痛點、全自動流程、風險治理、GitLab 與 Slack 整合、Demo 證據與企業導入路線。</span>
           </div>
         </div>
         <div class="foot"><span>Private Repo: meeting-agent</span><span>GitLab · Slack · AI Gateway</span></div>
@@ -801,8 +801,8 @@
             <ul>
               <li>AI 從討論中拆解工作、風險、期限與依賴。</li>
               <li>系統先尊重逐字稿提及的人，再用職責表補位。</li>
-              <li>審核後一鍵建立 GitLab issue 與 Slack 派工摘要。</li>
-              <li>每個任務保留派工依據，方便稽核與回溯。</li>
+              <li>低與中風險任務自動建立 GitLab issue 並送 Slack。</li>
+              <li>高風險任務保留審核門檻，所有任務留下派工依據。</li>
             </ul>
           </article>
         </div>
@@ -813,8 +813,8 @@
         <div class="chrome"><span>03 / Workflow</span><span>從貼上到派發</span></div>
         <div>
           <p class="kicker">Operating Flow</p>
-          <h2>五段式審核派工流程</h2>
-          <p class="compact-lead">保留人工審核門檻，先讓 AI 做整理、推理與候選派工，再由管理者確認後觸發外部系統。</p>
+          <h2>五段式自動派工流程</h2>
+          <p class="compact-lead">產品把人類工作收斂到兩件事：貼上逐字稿、審核高風險。其餘拆解、路由、issue 建立、Slack 推播與催繳交給 agent 自動完成。</p>
         </div>
         <div class="pipeline">
           <article class="step">
@@ -834,16 +834,16 @@
           </article>
           <article class="step">
             <b>04</b>
-            <h3>審核修正</h3>
-            <p>管理者檢查派工依據、高風險項與外部整合狀態。</p>
+            <h3>風險閘門</h3>
+            <p>低與中風險直接進自動流程，高風險才停下來等人工審核。</p>
           </article>
           <article class="step">
             <b>05</b>
             <h3>同步監工</h3>
-            <p>建立 GitLab issue，並在 Slack 群組發布摘要與提醒。</p>
+            <p>建立 GitLab issue，送 Slack 派工摘要，並依 due date 自動催繳。</p>
           </article>
         </div>
-        <div class="foot"><span>Review first, dispatch after approval</span><span>04</span></div>
+        <div class="foot"><span>Human reviews high risk only; AI handles routine execution</span><span>04</span></div>
       </section>
 
       <section class="slide hero light" data-title="定位">
@@ -853,15 +853,15 @@
             <p class="kicker">Product Position</p>
             <h1>企業會議到執行的控制台</h1>
             <p class="lead">
-              它的第一畫面不是聊天框，而是可審核的管理台：貼記錄、看拆解、看派工依據、確認整合就緒，再推進到 GitLab 與 Slack。
+              它的第一畫面不是聊天框，而是任務控制台：貼記錄、看 AI 拆解、看派工依據、審核高風險，其餘讓 agent 自動推進到 GitLab 與 Slack。
             </p>
           </div>
           <div class="hero-card">
             <strong>Agent</strong>
-            <span>AI 做「解析與建議」，人做「核准與責任確認」，外部系統做「紀錄與催辦」。</span>
+            <span>AI 做「解析、派工、催繳」，人做「高風險核准」，外部系統做「紀錄與狀態來源」。</span>
           </div>
         </div>
-        <div class="foot"><span>適合分級自動化：從人工核准到半自動提醒</span><span>05</span></div>
+        <div class="foot"><span>適合分級自動化：例行任務全自動，高風險保留人類控制權</span><span>05</span></div>
       </section>
 
       <section class="slide dark" data-title="能力">
@@ -885,15 +885,15 @@
           </article>
           <article class="capability">
             <h3>GitLab issue 建立</h3>
-            <p>審核後建立 issue，若能解析使用者，會嘗試派給對應 assignee。</p>
+            <p>低與中風險任務可自動建立 issue，並附上 owner、deadline、priority、風險與原始摘要。</p>
           </article>
           <article class="capability">
             <h3>Slack 派工與催辦</h3>
-            <p>產生群組摘要與提醒訊息，送出前保留人工確認，避免誤發企業大群。</p>
+            <p>低與中風險可直接送出群組摘要，高風險不直送；提醒依 due date 與排程狀態控制。</p>
           </article>
           <article class="capability">
-            <h3>整合就緒檢查</h3>
-            <p>UI 顯示 AI、GitLab、Slack 缺少哪些欄位，降低 Demo 與導入時的設定錯誤。</p>
+            <h3>自動催繳排程</h3>
+            <p>依任務期限產生 Slack reminder，支援排程開關、批次去重與避免測試期間重複推播。</p>
           </article>
         </div>
         <div class="foot"><span>每項能力都以「可審核、可追蹤、可回溯」為前提</span><span>06</span></div>
@@ -915,7 +915,7 @@
           <article class="panel">
             <span class="status ready">已具備</span>
             <h3>高風險標記</h3>
-            <p>客戶資料、法務、跨團隊發布等工作會要求更高審核注意。</p>
+            <p>客戶資料、法務、跨團隊發布等工作會保留人工審核，不進低層級直送流程。</p>
           </article>
           <article class="panel">
             <span class="status ready">已具備</span>
@@ -963,31 +963,31 @@
             </div>
             <div class="arch-box">
               <b>Slack</b>
-              <span>向公司群組發布派工摘要，後續可擴充提醒排程。</span>
+            <span>向公司群組發布派工摘要，並依期限與風險規則送出催繳提醒。</span>
             </div>
           </div>
         </div>
-        <div class="foot"><span>目前為單機 MVP 架構，正式版需加入 DB、Auth、Audit Log</span><span>08</span></div>
+        <div class="foot"><span>目前為單機 MVP 架構，正式版需加入 DB、Auth、Audit Log 與長期排程器</span><span>08</span></div>
       </section>
 
       <section class="slide light" data-title="Demo">
         <div class="chrome"><span>08 / Demo Evidence</span><span>目前可展示狀態</span></div>
         <div>
           <p class="kicker">Build Evidence</p>
-          <h2>Demo 已具備完整主流程雛形</h2>
+          <h2>Demo 已跑通完整外部整合流程</h2>
         </div>
         <div class="metric-grid">
           <article class="metric">
-            <strong>12</strong>
-            <span>自動化測試通過，覆蓋 AI 解析、責任路由、XLSX 匯入與整合就緒邏輯。</span>
+            <strong>20</strong>
+            <span>自動化測試通過，覆蓋 AI 解析、責任路由、XLSX 匯入、Slack 規則與自動化策略。</span>
           </article>
           <article class="metric">
-            <strong>3</strong>
-            <span>AI、GitLab、Slack 三組設定區塊可在 Web 管理台檢查缺漏。</span>
+            <strong>2</strong>
+            <span>外部測試建立 GitLab issue #1 與 #2，並成功同步狀態。</span>
           </article>
           <article class="metric">
             <strong>1</strong>
-            <span>私有 GitHub repo 已建立，並以 draft PR 承接後續企業化功能。</span>
+            <span>Slack 派工摘要已送到測試頻道，排程催繳可開關控制。</span>
           </article>
           <article class="metric">
             <strong>0</strong>
@@ -997,11 +997,11 @@
         <div class="grid-2">
           <article class="panel">
             <span class="label">Can Demo Now</span>
-            <p>貼上逐字稿、AI 拆解、顯示派工依據、用職責表補位、匯入 XLSX、檢查整合欄位。</p>
+            <p>貼上逐字稿、AI 拆解、用職責表補位、低/中風險自動派工、高風險審核、GitLab 與 Slack 外部測試。</p>
           </article>
           <article class="panel">
-            <span class="label">Needs Real Config</span>
-            <p>正式送 Slack 與建立 GitLab issue 前，需要企業 token、project id、channel、使用者對照表與審核確認。</p>
+            <span class="label">Enterprise Setup</span>
+            <p>正式導入需要企業級 token 管理、Slack user ID 對照、GitLab assignee 對照、資料庫與 audit log。</p>
           </article>
         </div>
         <div class="foot"><span>Demo 重點：證明「會議語意」可以轉成「可治理工作流」</span><span>09</span></div>
@@ -1011,23 +1011,23 @@
         <div class="chrome"><span>09 / Next</span><span>企業版路線圖</span></div>
         <div>
           <p class="kicker">Roadmap</p>
-          <h1>下一步：接入公司資料，從 Demo 進入內部試點</h1>
+          <h1>下一步：從可跑 demo 升級成企業內部試點</h1>
         </div>
         <div class="timeline">
           <article class="panel">
             <span class="label">Phase 1</span>
-            <h3>正式資料接入</h3>
-            <p>整理 GitLab project、Slack channel、user ID、職責 XLSX 標準欄位與測試會議樣本。</p>
+            <h3>資料與身分接入</h3>
+            <p>整理 GitLab project、Slack channel、user ID、職責 XLSX 標準欄位與會議樣本庫。</p>
           </article>
           <article class="panel">
             <span class="label">Phase 2</span>
             <h3>企業控制面</h3>
-            <p>加入登入權限、審核紀錄、派工版本、重試機制與 issue 同步狀態。</p>
+            <p>加入登入權限、審核紀錄、派工版本、重試機制、issue 同步狀態與操作稽核。</p>
           </article>
           <article class="panel">
             <span class="label">Phase 3</span>
             <h3>監工自動化</h3>
-            <p>加入 Slack 排程提醒、逾期升級、週報摘要與跨專案 dashboard。</p>
+            <p>擴充逾期升級、週報摘要、多專案 dashboard 與管理層例外告警。</p>
           </article>
         </div>
         <div class="foot"><span>結論：先做可控派工，再擴成企業專案監工 agent</span><span>10</span></div>
