@@ -38,6 +38,12 @@ http://127.0.0.1:5173
 http://127.0.0.1:5173/docs/product-deck/index.html
 ```
 
+公開部署教學請看：
+
+```text
+docs/DEPLOYMENT.md
+```
+
 ## 3. 第一次設定
 
 所有 API key 都由使用者自己在 Web 管理台輸入。專案不內建任何 key，也不應把 key 寫入 README、程式碼、GitLab issue 或 Slack 訊息。

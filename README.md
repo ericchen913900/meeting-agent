@@ -9,7 +9,18 @@ The transcript does not need to directly say "who does what." The agent first ex
 完整中文使用教學請看：
 
 - [docs/USAGE.md](docs/USAGE.md)
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 - [Product deck](docs/product-deck/index.html)
+
+## Screenshots
+
+![Smart Project Assistant console](docs/assets/screenshots/meeting-agent-console.png)
+
+## Public demo deck
+
+The product deck is hosted with GitHub Pages:
+
+https://ericchen913900.github.io/meeting-agent/
 
 ## User-provided API keys
 
@@ -42,6 +53,18 @@ npm test
 npm run typecheck
 npm run build
 ```
+
+## Deploy
+
+For local production mode:
+
+```bash
+npm ci
+npm run build
+HOST=0.0.0.0 PORT=5173 npm run start
+```
+
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Windows PowerShell, Render, Railway/Fly style deployment, GitHub Pages deck hosting, and security notes.
 
 ## GitLab permissions
 
