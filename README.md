@@ -32,6 +32,212 @@ This project does not ship with any API key. Users enter credentials in the Web 
 
 The backend uses credentials only for the current request. It does not write them to the repo or server files. The browser keeps secret settings in session storage for the current tab session.
 
+## 新手 Token 設定教學
+
+Token 可以理解成「給程式用的密碼」。這個專案需要使用者自己提供三種 token：
+
+| 服務 | 要建立什麼 | 大概長相 | 用途 |
+| --- | --- | --- | --- |
+| AI provider | API key | `sk-...` 或各家 provider 的 key | 讓 AI 從會議記錄拆任務 |
+| GitLab | Personal Access Token | `glpat-...` | 建立與同步 GitLab issue |
+| Slack | Bot User OAuth Token | `xoxb-...` | 發送派工與催繳訊息 |
+
+安全規則：
+
+- 不要把真實 token commit 到 GitHub。
+- 不要把 token 貼到 Slack 群組。
+- 不要把 token 放進截圖。
+- token 產生後通常只顯示一次，請先存到安全的密碼管理工具。
+- 如果 token 外洩，立刻 revoke / rotate，重新產生新的。
+
+### AI Token
+
+你可以使用 OpenAI、Anthropic / Claude，或公司內部 AI gateway。
+
+#### 選項 A：OpenAI
+
+1. 打開 [OpenAI Platform](https://platform.openai.com/)。
+2. 登入帳號。
+3. 進入 project settings。
+4. 找到 `API Keys`。
+5. 點 `Create new secret key`。
+6. 立刻複製產生的 key。離開畫面後通常不能再看到完整 key。
+7. 貼到本產品的 `AI API Key` 欄位。
+
+本產品建議填：
+
+```text
+AI Provider: OpenAI Responses
+AI Base URL: https://api.openai.com/v1
+Model: gpt-4o-mini
+AI API Key: sk-...
+```
+
+OpenAI 官方說明：project member 可以建立 project API key，secret key 建立後要立刻安全保存。官方文件：<https://help.openai.com/en/articles/9186755-managing-your-work-in-the-api-platform-with-projects/>
+
+#### 選項 B：Anthropic / Claude
+
+1. 打開 [Claude Console](https://console.anthropic.com/)。
+2. 登入帳號。
+3. 進入 `Account Settings` 或 `API Keys`。
+4. 建立新的 API key。
+5. 立刻複製 key。
+6. 貼到本產品的 `AI API Key` 欄位。
+
+本產品建議填：
+
+```text
+AI Provider: Anthropic Messages
+AI Base URL: https://api.anthropic.com
+Model: claude-3-5-haiku-latest 或你的帳號可用模型
+AI API Key: 你的 Claude API key
+```
+
+Anthropic 官方說明：Claude API 需要 Console 產生的 API key。官方文件：<https://platform.claude.com/docs/en/api/overview>
+
+#### 選項 C：公司 AI Gateway
+
+如果公司有提供內部 AI gateway，請填公司給你的值：
+
+```text
+AI Provider: Anthropic Messages 或 OpenAI-compatible provider
+AI Base URL: 公司 gateway URL
+Model: 公司提供的模型名稱
+AI API Key: 公司提供的 token
+```
+
+不要自行把公司 gateway URL 改成 OpenAI 或 Anthropic 官方 URL，除非管理員明確要求。
+
+### GitLab Token
+
+新手最簡單的做法是建立 GitLab Personal Access Token。
+
+1. 打開 [GitLab](https://gitlab.com/)。
+2. 登入帳號。
+3. 右上角點你的頭像。
+4. 點 `Edit profile`。
+5. 左邊選單進入 `Access` > `Personal access tokens`。
+6. 點 `Generate token`。如果 GitLab 要你選 token 類型，選 `Legacy token`。
+7. Token name 填：
+
+```text
+meeting-agent
+```
+
+8. Expiration date 選一個到期日，例如 90 天或 180 天。
+9. Scope 選：
+
+```text
+api
+```
+
+10. 點 `Generate token`。
+11. 立刻複製 token。GitLab 離開或重新整理頁面後不會再顯示完整 token。
+12. 貼到本產品的 `GitLab Token` 欄位。
+
+本產品建議填：
+
+```text
+GitLab Base URL: https://gitlab.com
+Project ID or path: your-group/your-project
+GitLab Token: glpat-...
+```
+
+Project path 範例：
+
+```text
+ericchen913900-group/ericchen913900-project
+```
+
+GitLab 官方說明：Personal Access Token 可以用來呼叫 GitLab API，`api` scope 具備 API 讀寫權限。官方文件：<https://docs.gitlab.com/user/profile/personal_access_tokens/>
+
+### Slack Token
+
+這個產品需要 Slack bot token，不是 Client ID、Client Secret、Signing Secret，也不是 Verification Token。
+
+你要拿到的 token 會長這樣：
+
+```text
+xoxb-
+```
+
+建立方式：
+
+1. 打開 [Slack API Apps](https://api.slack.com/apps)。
+2. 點 `Create New App`。
+3. 選 `From scratch`。
+4. App name 填：
+
+```text
+Meeting Agent
+```
+
+5. 選你的 Slack workspace。
+6. 左邊選單打開 `OAuth & Permissions`。
+7. 找到 `Scopes`。
+8. 在 `Bot Token Scopes` 加入：
+
+```text
+chat:write
+```
+
+9. 點 `Install to Workspace` 或 `Reinstall to Workspace`。
+10. 同意安裝。
+11. 回到 `OAuth & Permissions`。
+12. 複製 `Bot User OAuth Token`。
+13. 貼到本產品的 `Slack Bot Token` 欄位。
+
+本產品建議填：
+
+```text
+Slack Channel ID: C...
+Slack Bot Token: xoxb-...
+```
+
+Slack Channel ID 找法：
+
+1. 打開 Slack。
+2. 進入你想讓 bot 發訊息的頻道。
+3. 點頻道名稱。
+4. 打開 `About`。
+5. 複製 Channel ID。通常會以 `C` 開頭。
+
+把 bot 加進頻道：
+
+```text
+/invite @Meeting Agent
+```
+
+如果沒有把 bot 加進頻道，Slack 可能會回 `channel_not_found`，或拒絕送出訊息。
+
+Slack 官方說明：Bot token 會綁定已安裝到 workspace 的 Slack app，並且通常以 `xoxb-` 開頭；`chat:write` scope 讓 app 可以送訊息。官方文件：
+
+- <https://docs.slack.dev/authentication/tokens/>
+- <https://docs.slack.dev/reference/scopes/chat.write/>
+
+### Token 要貼到產品哪裡
+
+打開：
+
+```text
+http://127.0.0.1:5173
+```
+
+在左側 `API 接入` 區塊填：
+
+```text
+AI Base URL
+Model
+AI API Key
+GitLab Base URL
+Project ID or path
+GitLab Token
+Slack Channel ID
+Slack Bot Token
+```
+
+第一次測試請使用測試 GitLab project 和測試 Slack channel。確認訊息格式正確後，再切到正式公司頻道。
+
 ## Start
 
 ```bash
